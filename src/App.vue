@@ -2,108 +2,103 @@
 
   <div class="container">
     <div class="row my-5">
-      <h1 class="display-4">QR codes</h1>
+      <h1 class="display-4">Reepay transaction organizer</h1>
     </div>
 
     <div class="row mb-3 justify-content-center">
       <div class="col-lg-10 col-xl-8">
         <div class="input-group">
-          <input v-model.trim="inputString" @keyup.enter="download(inputString)" class="form-control form-control-lg"
-                 type="text" maxlength="100" autofocus placeholder="Type some content" aria-label="QR content"
-                 aria-describedby="input-length-helper">
-          <button @click="clear()" :disabled="!inputString" class="btn btn-secondary" type="button">
-            Clear
-          </button>
-        </div>
-        <div id="input-length-helper" class="form-text"
-             :class="{'text-warning': inputString.length >= 75, 'text-danger': inputString.length >= 90}">
-          {{ inputString.length }} / 100
-        </div>
-      </div>
-    </div>
-
-    <div class="row justify-content-center mb-3">
-      <div v-if="inputString" class="col-6 col-sm-4 col-lg-3 col-xl-2">
-        <div class="mb-3" v-html="qrSvg"></div>
-        <div class="d-grid">
-          <button @click="download(inputString)" class="btn btn-primary btn-lg" type="button">Download</button>
+          <input @change="parseCSV" class="form-control form-control-lg" type="file" placeholder="Upload CSV file">
         </div>
       </div>
     </div>
 
     <div class="row justify-content-center">
       <div class="col-lg-10 col-xl-8">
-        <ProductList></ProductList>
+        <OverviewTable :rows="parsedRows"></OverviewTable>
       </div>
     </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10 col-xl-8">
+        <OutputTable :rows="parsedRows"></OutputTable>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script lang="ts">
 import '@/assets/style.scss'
 import {defineComponent} from 'vue';
-import QRCode from 'qrcode'
-import ProductList from '@/components/ProductList.vue';
+import OverviewTable from '@/components/OverviewTable.vue';
+import {Row} from '@/types/row';
+import OutputTable from '@/components/OutputTable.vue';
 
 export default defineComponent({
   name: 'App',
-  components: {ProductList},
+  components: {OutputTable, OverviewTable},
   data() {
     return {
-      inputString: '' as string,
-      qrSvg: '' as string,
-    }
-  },
-  watch: {
-    async inputString(newString) {
-      if (newString.length <= 0) {
-        return;
-      }
-
-      this.qrSvg = await this.qr(newString);
+      parsedRows: [] as Row[],
     }
   },
   methods: {
-    clear(): void {
-      this.inputString = '';
-    },
-    qr(inputString: string, width?: number): Promise<string> {
-      return QRCode.toString(inputString, {
-        type: 'svg',
-        errorCorrectionLevel: 'H',
-        margin: 0,
-        color: {
-          dark: '#000000FF',
-          light: '#FFFFFF00'
-        },
-        width
-      });
-    },
-    async download(inputString: string): Promise<void> {
-      if (!inputString) {
+    parseCSV(event: Event): void {
+      const input = (event.target as HTMLInputElement);
+
+      if (!input.files || input.files.length === 0) {
         return;
       }
 
-      const fileName = this.generateFileName(inputString);
-      const objectUrl = this.generateObjectURL(await this.qr(inputString, 45.354));
+      const file = input.files[0];
 
-      // Create and activate link element
-      const el = document.createElement('a');
-      el.download = fileName;
-      el.href = objectUrl;
-      el.click();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.$papa.parse(file, {
+        complete: (results: { data: string[][] }) => {
+          console.log(results);
+          const filteredData = results.data
+              .filter(this.filterRow);
 
-      // Clean up
-      el.remove();
-      window.URL.revokeObjectURL(objectUrl);
+          const rows = []
+          for (const row of filteredData) {
+            rows.push(this.mapRow(row));
+          }
+
+          this.parsedRows = rows
+              .sort((a, b) => a.date.getTime() - b.date.getTime());
+        }
+      });
     },
-    generateFileName(inputString: string): string {
-      const split = inputString.split('/');
+    filterRow(input: string[]): boolean {
+      if (input.length < 15) {
+        return false;
+      }
 
-      return split[split.length - 1] + '-qr.svg';
+      return input[1] !== 'Date';
     },
-    generateObjectURL(data: string): string {
-      return window.URL.createObjectURL(new Blob([data]));
+    mapRow(input: string[]): Row {
+      const charged = parseFloat(input[3]);
+      const fee = parseFloat(input[4]);
+
+      return {
+        id: Math.random().toString(),
+        active: input[5] === '0.00',
+        date: this.mapDate(input[1]),
+        type: input[2],
+        charged,
+        fee,
+        transferred: charged - fee,
+      };
+    },
+    mapDate(input: string): Date {
+      const year = input.substring(6);
+      const month = input.substring(3, 5);
+      const day = input.substring(0, 2);
+      const iso8601 = `${year}-${month}-${day}`;
+
+      return new Date(Date.parse(iso8601));
     }
   }
 });

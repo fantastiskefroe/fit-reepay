@@ -1,5 +1,5 @@
 {
-  "name": "spir-qr",
+  "name": "fit-reepay",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,11 +12,12 @@
     "@sentry/vue": "^7.9.0",
     "bootstrap": "^5.2.0",
     "core-js": "^3.24.1",
-    "qrcode": "^1.5.1",
-    "vue": "^3.2.37"
+    "papaparse": "^5.3.2",
+    "vue": "^3.2.37",
+    "vue-papa-parse": "^3.1.0"
   },
   "devDependencies": {
-    "@types/qrcode": "^1.4.2",
+    "@types/papaparse": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
     "@vue/cli-plugin-babel": "~5.0.8",

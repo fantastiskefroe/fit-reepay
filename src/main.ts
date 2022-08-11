@@ -1,9 +1,9 @@
 import {createApp} from 'vue'
-import * as Sentry from '@sentry/vue';
 import App from '@/App.vue';
+import * as Sentry from '@sentry/vue';
+import VuePapaParse from 'vue-papa-parse'
 import {BrowserTracing} from '@sentry/tracing';
 
-const app = createApp(App);
 
 const options = {
     dsn: 'https://bd84d092c35549a28d0470b3be99868b@o1249239.ingest.sentry.io/6409646',
@@ -25,4 +25,6 @@ if (release !== undefined) {
     Sentry.init(options);
 }
 
+const app = createApp(App);
+app.use(VuePapaParse)
 app.mount('#app')
