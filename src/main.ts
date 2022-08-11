@@ -6,7 +6,7 @@ import {BrowserTracing} from '@sentry/tracing';
 
 
 const options = {
-    dsn: 'https://bd84d092c35549a28d0470b3be99868b@o1249239.ingest.sentry.io/6409646',
+    dsn: "https://08b43fe922a1413ebfbbe34c03d0525c@o1249239.ingest.sentry.io/6640884",
     tracesSampleRate: 1.0,
     integrations: [new BrowserTracing],
 };
