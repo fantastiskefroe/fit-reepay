@@ -16,7 +16,7 @@ export default defineComponent({
     rows: {type: Object as PropType<Row[]>, required: true}
   },
   computed: {
-    formattedCsv() {
+    formattedCsv(): string {
       if (this.rows.length === 0) {
         return '';
       }
