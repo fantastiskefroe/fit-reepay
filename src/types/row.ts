@@ -1,5 +1,5 @@
 export interface Row {
-    id: string;
+    id: number;
     active: boolean;
     date: Date;
     type: string;

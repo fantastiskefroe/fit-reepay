@@ -23,7 +23,7 @@ export default defineComponent({
 
       const data = this.rows
           .filter(row => row.active)
-          .map(this.mapRow);
+          .flatMap(this.mapRow);
       data.unshift([
         'Bilag nr.',
         'Dato',
@@ -39,15 +39,59 @@ export default defineComponent({
     }
   },
   methods: {
-    mapRow(input: Row): string[] {
+    mapRow(input: Row): string[][] {
+      if (input.fee) {
+        return this.mapIncludingFee(input);
+      }
+
+      if (input.transferred > 0) {
+        return [[
+          '',
+          input.date.toISOString(),
+          'Overførsel fra ReePay til Bank',
+          '55080',
+          (-input.transferred).toString().replace('.', ','),
+          '55000'
+        ]];
+      } else {
+        return [[
+          '',
+          input.date.toISOString(),
+          'Overførsel fra Bank til ReePay',
+          '55000',
+          input.transferred.toString().replace('.', ','),
+          '55080'
+        ]];
+      }
+    },
+    mapIncludingFee(input: Row): string[][] {
+      const id = Math.floor((input.id * 100000) + 5000).toString();
       return [
-        '', //Bilag nr.
-        input.date.toISOString(), //Dato
-        'Overførsel fra ReePay til Bank', //Tekst
-        '55080', //Konto
-        (-input.transferred).toString().replace('.', ','), //Beløb
-        '55000' //Modkonto
-      ];
+        [
+          id,
+          input.date.toISOString(),
+          'Reepay - Trukket',
+          '55080',
+          (-input.charged).toString().replace('.', ','),
+          ''
+        ],
+        [
+          id,
+          input.date.toISOString(),
+          'Reepay - Gebyr',
+          '7220',
+          input.fee.toString().replace('.', ','),
+          ''
+        ],
+        [
+          id,
+          input.date.toISOString(),
+          'Reepay - Udbetalt',
+          '55000',
+          input.transferred.toString().replace('.', ','),
+          ''
+        ],
+      ]
     }
   }
 });

@@ -80,11 +80,11 @@ export default defineComponent({
     },
     mapRow(input: string[]): Row {
       const charged = parseFloat(input[3]);
-      const fee = parseFloat(input[4]);
+      const fee = -parseFloat(input[5]);
 
       return {
-        id: Math.random().toString(),
-        active: input[5] === '0.00',
+        id: Math.random(),
+        active: true,
         date: this.mapDate(input[1]),
         type: input[2],
         charged,
